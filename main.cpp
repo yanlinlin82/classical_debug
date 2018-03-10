@@ -31,6 +31,59 @@ unsigned short flag = 0;
 unsigned char memory[65536];
 unsigned short cursor = 0x100;
 
+enum ProcessorType
+{
+	PROCESSOR_8086 = 0,
+	PROCESSOR_186,
+	PROCESSOR_286,
+	PROCESSOR_386,
+	PROCESSOR_486,
+	PROCESSOR_586,
+	PROCESSOR_686
+};
+
+enum CoProcessorType
+{
+	COPROCESSOR_NONE = 0,
+	COPROCESSOR_287,
+	COPROCESSOR_387
+};
+
+ProcessorType processor = PROCESSOR_686;
+CoProcessorType coprocessor = COPROCESSOR_387;
+
+const static string PROCESSOR_NAMES[] = {
+	"8086/88",
+	"186",
+	"286",
+	"386",
+	"486",
+	"586",
+	"686"
+};
+
+const static string CO_PROCESSOR_NAMES[] = {
+	"without coprocessor",
+	"with 287",
+	"with coprocessor"
+};
+
+void SetProcessorType(ProcessorType type)
+{
+	processor = type;
+}
+
+void SetCoProcessorType(CoProcessorType type)
+{
+	coprocessor = type;
+}
+
+void ShowProcessorType()
+{
+	printf("%s %s\n", PROCESSOR_NAMES[processor].c_str(),
+			CO_PROCESSOR_NAMES[coprocessor].c_str());
+}
+
 string Trim(const string& s, const string& chars = WHITE_SPACE_CHARS)
 {
 	auto pos1 = s.find_first_not_of(WHITE_SPACE_CHARS);
@@ -125,6 +178,20 @@ void Process(const string& cmd)
 		DumpMemory();
 	} else if (cmd == "r") {
 		ShowRegisters();
+	} else if (cmd[0] == 'm') {
+		if (cmd[1] >= '0' && cmd[1] <= '6') {
+			SetProcessorType(static_cast<ProcessorType>(cmd[1] - '0'));
+		} else if (cmd[1] == '\0' || cmd[1] == '?') {
+			ShowProcessorType();
+		} else if (cmd == "mnc") {
+			SetCoProcessorType(COPROCESSOR_NONE);
+		} else if (cmd == "mc2") {
+			SetCoProcessorType(COPROCESSOR_287);
+		} else if (cmd == "mc") {
+			SetCoProcessorType(COPROCESSOR_387);
+		} else {
+			printf("  ^ Error\n");
+		}
 	} else {
 		fprintf(stderr, "Unsupported command: '%s'\n", cmd.c_str());
 	}
