@@ -1,5 +1,5 @@
 #include <cstdio>
-#include <cstring>
+#include <cstdlib>
 #include <string>
 
 using namespace std;
@@ -12,6 +12,24 @@ void ShowPrompt()
 const static string WHITE_SPACE_CHARS{" \t\r\n"};
 
 const size_t MAX_INPUT_BUFFER_SIZE = 4096;
+
+unsigned short ax = 0;
+unsigned short bx = 0;
+unsigned short cx = 0;
+unsigned short dx = 0;
+unsigned short sp = 0xFFFE;
+unsigned short bp = 0;
+unsigned short si = 0;
+unsigned short di = 0;
+unsigned short ds = 0x07BE;
+unsigned short es = 0x07BE;
+unsigned short ss = 0x07BE;
+unsigned short cs = 0x07BE;
+unsigned short ip = 0x0100;
+unsigned short flag = 0;
+
+unsigned char memory[65536];
+unsigned short cursor = 0x100;
 
 string Trim(const string& s, const string& chars = WHITE_SPACE_CHARS)
 {
@@ -69,6 +87,32 @@ void PrintUsageEMS()
 	printf("  Show status   XS\n");
 }
 
+void DumpMemory()
+{
+	for (int i = 0; i < 8; ++i) {
+		printf("%04X:%04X ", ds, cursor);
+		for (int j = 0; j < 16; ++j) {
+			printf(" %02X", memory[cursor + j]);
+		}
+		printf("   ");
+		for (int j = 0; j < 16; ++j) {
+			unsigned char c = memory[cursor + j];
+			printf("%c", (c >= 0x20 && c < 0x7F) ? c : '.');
+		}
+		printf("\n");
+		cursor += 16;
+	}
+}
+
+void ShowRegisters()
+{
+	printf("AX=%04X  BX=%04X  CX=%04X  DX=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X\n",
+			ax, bx, cx, dx, sp, bp, si, di);
+	printf("DS=%04X  ES=%04X  SS=%04X  CS=%04X  IP=%04X   NV UP DI PL NZ NA PO NC\n",
+			ds, es, ss, cs, ip);
+	printf("%04X:%04X F60000        TEST    BYTE PTR [BX+SI],00                  DS:0000=CD\n", cs, ip);
+}
+
 void Process(const string& cmd)
 {
 	if (cmd == "q") {
@@ -77,13 +121,26 @@ void Process(const string& cmd)
 		PrintUsage();
 	} else if (cmd == "X?") {
 		PrintUsageEMS();
+	} else if (cmd == "d") {
+		DumpMemory();
+	} else if (cmd == "r") {
+		ShowRegisters();
 	} else {
 		fprintf(stderr, "Unsupported command: '%s'\n", cmd.c_str());
 	}
 }
 
+void InitMemroy()
+{
+	srand(123);
+	for (size_t i = 0; i < sizeof(memory); ++i) {
+		memory[i] = static_cast<unsigned char>(rand());
+	}
+}
+
 int main(int argc, char* const* argv)
 {
+	InitMemroy();
 	for (;;) {
 		ShowPrompt();
 		auto cmd = GetCommand();
