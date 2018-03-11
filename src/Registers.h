@@ -1,11 +1,14 @@
 #ifndef REGISTERS_H__
 #define REGISTERS_H__
 
+#include <string>
+
 class Registers
 {
 public:
 	void Dump();
 	unsigned short GetDS() const { return ds; }
+	bool GetSeg(const std::string& name, unsigned short& value) const;
 private:
 	unsigned short ax = 0;
 	unsigned short bx = 0;

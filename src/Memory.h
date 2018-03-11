@@ -1,15 +1,19 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
+#include <vector>
+
 class Memory
 {
 public:
 	Memory();
 
-	void Dump(unsigned short segment, unsigned short offset, unsigned short length);
+	void Dump(unsigned short seg, unsigned short start, unsigned short end);
+
+	void Compare(unsigned short srcSeg, unsigned short srcStart, unsigned short srcEnd,
+			unsigned short dstSeg, unsigned short dstStart);
 private:
-	unsigned char memory[65536];
-	unsigned short cursor = 0x100;
+	std::vector<unsigned char> data_;
 };
 
 #endif
