@@ -15,7 +15,7 @@ void Memory::Dump(unsigned short segment, unsigned short offset, unsigned short 
 	for (int i = 0; i < 8; ++i) {
 		printf("%04X:%04X ", segment, cursor);
 		for (int j = 0; j < 16; ++j) {
-			printf(" %02X", memory[cursor + j]);
+			printf("%c%02X", (j == 8 ? '-' : ' '), memory[cursor + j]);
 		}
 		printf("   ");
 		for (int j = 0; j < 16; ++j) {
