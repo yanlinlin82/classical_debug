@@ -1,2 +1,8 @@
 project('classical_debug', 'cpp')
-executable('debug', 'main.cpp')
+executable('debug', [
+  'src/CommandParser.cpp',
+  'src/Processor.cpp',
+  'src/Registers.cpp',
+  'src/Memory.cpp',
+  'src/main.cpp'
+  ])
