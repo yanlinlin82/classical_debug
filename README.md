@@ -6,3 +6,7 @@ Try to re-implement the classical debug.exe program in DOS.
 
     $ meson build
     $ ninja -C build
+
+## Links
+
+* http://thestarman.pcministry.com/asm/debug/debug.htm
