@@ -138,13 +138,22 @@ bool ParseAddress(const std::string& s, unsigned short& seg, unsigned short& off
 	return true;
 }
 
+bool EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, size_t min, size_t max)
+{
+	if (words.size() < min) {
+		ShowError(cmdSize, "Missing argument");
+		return false;
+	} else if (words.size() > max) {
+		ShowError(words[4].first, "Unexpected argument");
+		return false;
+	} else {
+		return true;
+	}
+}
+
 void CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
-	if (words.size() < 4) {
-		ShowError(cmdSize, "Missing argument");
-		return;
-	} else if (words.size() > 4) {
-		ShowError(words[4].first, "Unexpected argument");
+	if (!EnsureArgumentCount(words, cmdSize, 4, 4)) {
 		return;
 	}
 
@@ -231,6 +240,25 @@ void SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& word
 	}
 }
 
+void HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize)
+{
+	if (!EnsureArgumentCount(words, cmdSize, 3, 3)) {
+		return;
+	}
+	unsigned short a, b;
+	if (!ParseHex(words[1].second, a)) {
+		ShowError(words[1].first, "Unexpected hex value '%s'", words[1].second.c_str());
+		return;
+	}
+	if (!ParseHex(words[2].second, b)) {
+		ShowError(words[2].first, "Unexpected hex value '%s'", words[2].second.c_str());
+		return;
+	}
+	printf("%04X  %04X\n",
+			static_cast<unsigned short>(a + b),
+			static_cast<unsigned short>(a - b));
+}
+
 void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor, Registers& registers, Memory& memory)
 {
 	switch (tolower(words[0].second[0])) {
@@ -255,6 +283,9 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		break;
 	case 'm':
 		SwitchProcessorType(words, processor);
+		break;
+	case 'h':
+		HexCalc(words, cmdSize);
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);
