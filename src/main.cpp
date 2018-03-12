@@ -77,25 +77,26 @@ void ShowError(size_t space, const char* fmt, ...)
 	fflush(stdout);
 }
 
-bool ParseHex(char c, unsigned short& value)
+bool ParseHex(char c, unsigned char& value)
 {
 	if (c >= '0' && c <= '9') {
-		value = static_cast<unsigned short>(c - '0');
+		value = static_cast<unsigned char>(c - '0');
 	} else if (c >= 'A' && c <= 'F') {
-		value = static_cast<unsigned short>(c - 'A') + 10;
+		value = static_cast<unsigned char>(c - 'A') + 10;
 	} else if (c >= 'a' && c <= 'f') {
-		value = static_cast<unsigned short>(c - 'a') + 10;
+		value = static_cast<unsigned char>(c - 'a') + 10;
 	} else {
 		return false;
 	}
 	return true;
 }
 
-bool ParseHex(const std::string& s, unsigned short& value)
+template <class T>
+bool ParseHex(const std::string& s, T& value)
 {
 	value = 0;
 	for (size_t i = 0; i < s.size(); ++i) {
-		unsigned short x;
+		unsigned char x;
 		if (!ParseHex(s[i], x)) {
 			return false;
 		}
@@ -144,7 +145,7 @@ bool EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& word
 		ShowError(cmdSize, "Missing argument");
 		return false;
 	} else if (words.size() > max) {
-		ShowError(words[4].first, "Unexpected argument");
+		ShowError(words.back().first, "Unexpected argument");
 		return false;
 	} else {
 		return true;
@@ -194,6 +195,36 @@ void CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Regist
 		return;
 	}
 	memory.Copy(seg, start, end, dstSeg, dstStart);
+}
+
+void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+{
+	if (words.size() < 2) {
+		ShowError(cmdSize, "Missing argument");
+		return;
+	}
+	unsigned short seg, start;
+	size_t errPos;
+	std::string errInfo;
+	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
+		ShowError(words[1].first + errPos, errInfo.c_str());
+		return;
+	}
+	std::vector<unsigned char> data;
+	if (words.size() > 2) {
+		for (size_t i = 2; i < words.size(); ++i) {
+			unsigned char value;
+			if (!ParseHex(words[i].second, value)) {
+				ShowError(words[i].first, "Invalid hex value '%s'", words[i].second.c_str());
+				return;
+			} else {
+				data.push_back(value);
+			}
+		}
+	} else {
+		// TODO: try input data interactively
+	}
+	memory.PutData(seg, start, data);
 }
 
 void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
@@ -310,6 +341,9 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		break;
 	case 'h':
 		HexCalc(words, cmdSize);
+		break;
+	case 'e':
+		EnterData(words, cmdSize, registers, memory);
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);

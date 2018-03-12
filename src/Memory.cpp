@@ -87,3 +87,11 @@ void Memory::Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short
 		++dstOffset;
 	}
 }
+
+void Memory::PutData(unsigned short seg, unsigned short start, std::vector<unsigned char> data)
+{
+	size_t offset = seg * 16 + start;
+	for (size_t i = 0; i < data.size(); ++i) {
+		data_[offset + i] = data[i];
+	}
+}

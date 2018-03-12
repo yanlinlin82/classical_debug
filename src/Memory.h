@@ -14,6 +14,7 @@ public:
 			unsigned short dstSeg, unsigned short dstStart);
 	void Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short srcEnd,
 			unsigned short dstSeg, unsigned short dstStart);
+	void PutData(unsigned short srcSeg, unsigned short srcStart, std::vector<unsigned char> data);
 private:
 	std::vector<unsigned char> data_;
 };
