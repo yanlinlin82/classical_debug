@@ -125,9 +125,9 @@ bool ParseAddress(const std::string& s, unsigned short& seg, unsigned short& off
 		skip = pos + 1;
 		auto segReg = text.substr(0, pos);
 		text = text.substr(pos + 1);
-		if (!registers.GetSeg(segReg, seg)) {
+		if (!registers.GetSeg(segReg, seg) && !ParseHex(segReg, seg)) {
 			errPos = 0;
-			errInfo = "Invalid segment register '" + segReg + "'";
+			errInfo = "Invalid segment register/value '" + segReg + "'";
 			return false;
 		}
 	}
