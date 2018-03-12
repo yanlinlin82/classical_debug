@@ -176,6 +176,26 @@ void CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, siz
 	memory.Compare(srcSeg, srcStart, srcEnd, dstSeg, dstStart);
 }
 
+void CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
+{
+	unsigned short seg, start, end, dstSeg, dstStart;
+	size_t errPos;
+	std::string errInfo;
+	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
+		ShowError(words[1].first + errPos, errInfo.c_str());
+		return;
+	}
+	if (!ParseOffset(words[2].second, end, errPos, errInfo)) {
+		ShowError(words[2].first + errPos, errInfo.c_str());
+		return;
+	}
+	if (!ParseAddress(words[3].second, dstSeg, dstStart, errPos, errInfo, registers)) {
+		ShowError(words[3].first + errPos, errInfo.c_str());
+		return;
+	}
+	memory.Copy(seg, start, end, dstSeg, dstStart);
+}
+
 void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
 {
 	if (words.size() > 3) {
@@ -282,7 +302,11 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		processor.ShowRegisters();
 		break;
 	case 'm':
-		SwitchProcessorType(words, processor);
+		if (words.size() == 4) {
+			CopyMemory(words, registers, memory);
+		} else {
+			SwitchProcessorType(words, processor);
+		}
 		break;
 	case 'h':
 		HexCalc(words, cmdSize);

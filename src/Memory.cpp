@@ -70,3 +70,20 @@ void Memory::Compare(unsigned short srcSeg, unsigned short srcStart, unsigned sh
 		++dstOffset;
 	}
 }
+
+void Memory::Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short srcEnd,
+		unsigned short dstSeg, unsigned short dstStart)
+{
+	unsigned short srcOffset = srcStart;
+	unsigned short dstOffset = dstStart;
+	for (;;) {
+		size_t srcRealOffset = srcSeg * 16 + srcOffset;
+		size_t dstRealOffset = dstSeg * 16 + dstOffset;
+		data_[dstRealOffset] = data_[srcRealOffset];
+		if (srcOffset == srcEnd) {
+			break;
+		}
+		++srcOffset;
+		++dstOffset;
+	}
+}
