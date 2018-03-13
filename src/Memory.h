@@ -17,6 +17,8 @@ public:
 	void PutData(unsigned short srcSeg, unsigned short srcStart, std::vector<unsigned char> data);
 
 	unsigned char GetChar(unsigned short seg, unsigned short offset) const;
+	void SearchData(unsigned short seg, unsigned short start, unsigned short end,
+			const std::vector<unsigned char>& data);
 private:
 	std::vector<unsigned char> data_;
 };

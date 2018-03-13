@@ -330,6 +330,35 @@ void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 	memory.PutData(seg, start, data);
 }
 
+void SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+{
+	if (words.size() < 4) {
+		ShowError(cmdSize, "Missing argument");
+		return;
+	}
+	unsigned short seg, start, end;
+	size_t errPos;
+	std::string errInfo;
+	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
+		ShowError(words[1].first + errPos, errInfo.c_str());
+		return;
+	}
+	if (!ParseOffset(words[2].second, end, errPos, errInfo)) {
+		ShowError(words[2].first + errPos, errInfo.c_str());
+		return;
+	}
+	std::vector<unsigned char> data;
+	for (size_t i = 3; i < words.size(); ++i) {
+		unsigned char x;
+		if (!ParseHex(words[i].second, x)) {
+			ShowError(words[i].first + errPos, errInfo.c_str());
+			return;
+		}
+		data.push_back(x);
+	}
+	memory.SearchData(seg, start, end, data);
+}
+
 void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
 {
 	if (words.size() > 3) {
@@ -447,6 +476,9 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		break;
 	case 'e':
 		EnterData(words, cmdSize, registers, memory);
+		break;
+	case 's':
+		SearchData(words, cmdSize, registers, memory);
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);

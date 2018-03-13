@@ -101,3 +101,21 @@ unsigned char Memory::GetChar(unsigned short seg, unsigned short offset) const
 	size_t realOffset = seg * 16 + offset;
 	return data_[realOffset];
 }
+
+void Memory::SearchData(unsigned short seg, unsigned short start, unsigned short end,
+		const std::vector<unsigned char>& data)
+{
+	for (unsigned short offset = start; offset + data.size() != end; ++offset) {
+		size_t realOffset = seg * 16 + offset;
+		bool match = true;
+		for (size_t i = 0; i < data.size(); ++i) {
+			if (data_[realOffset + i] != data[i]) {
+				match = false;
+				break;
+			}
+		}
+		if (match) {
+			printf("%04X:%04X\n", seg, offset);
+		}
+	}
+}
