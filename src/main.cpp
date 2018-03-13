@@ -1,11 +1,64 @@
 #include <iostream>
+#include <cstdio>
 #include <cstring>
 #include <cstdarg>
 #include <string>
 #include <vector>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
 #include "Processor.h"
 #include "Registers.h"
 #include "Memory.h"
+
+int kbhit()
+{
+	struct timeval tv;
+	fd_set fds;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	FD_ZERO(&fds);
+	FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+	select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+	return FD_ISSET(STDIN_FILENO, &fds);
+}
+
+enum { NB_ENABLE, NB_DISABLE };
+
+void nonblock(int state)
+{
+	struct termios ttystate;
+
+	//get the terminal state
+	tcgetattr(STDIN_FILENO, &ttystate);
+
+	if (state == NB_ENABLE) {
+		//turn off canonical mode
+		ttystate.c_lflag &= ~(ICANON | ECHO);
+		//minimum of number input read.
+		ttystate.c_cc[VMIN] = 1;
+	} else if (state == NB_DISABLE) {
+		//turn on canonical mode
+		ttystate.c_lflag |= ICANON | ECHO;
+	}
+	//set the terminal attributes.
+	tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+}
+
+int get_input_char()
+{
+	nonblock(NB_ENABLE);
+	for (;;) {
+		if (kbhit()) {
+			int c = fgetc(stdin);
+			nonblock(NB_DISABLE);
+			return c;
+		}
+		usleep(0);
+	}
+}
 
 static std::string prompt = "-";
 unsigned short curSeg;
@@ -222,7 +275,57 @@ void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 			}
 		}
 	} else {
-		// TODO: try input data interactively
+		std::string word = "";
+		bool exitFlag = false;
+		for (unsigned short offset = start; !exitFlag; ++offset) {
+			if (offset == start || offset % 8 == 0) {
+				if (offset != start) {
+					printf("\n");
+				}
+				printf("%04X:%04X  ", seg, offset);
+			}
+			unsigned char oriValue = memory.GetChar(seg, offset);
+			printf("%02X.", oriValue);
+			fflush(stdout);
+			for (;;) {
+				int c = get_input_char();
+				if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+					if (word.size() < 2) {
+						printf("%c", c);
+						fflush(stdout);
+						word += c;
+					}
+				} else if (c == '\x7F') {
+					printf("%c", c);
+					fflush(stdout);
+					if (word.size() > 0) {
+						word.pop_back();
+					}
+				} else if (c == ' ' || c == '\n') {
+					if (word.empty()) {
+						printf("  ");
+						fflush(stdout);
+						data.push_back(oriValue);
+					} else {
+						unsigned short x;
+						ParseHex(word, x);
+						if (word.size() == 1) {
+							printf(" ");
+							fflush(stdout);
+						}
+						data.push_back(x);
+					}
+					if (c == '\n') {
+						exitFlag = true;
+					}
+					break;
+				}
+			}
+			printf("   ");
+			fflush(stdout);
+			word = "";
+		}
+		printf("\n");
 	}
 	memory.PutData(seg, start, data);
 }

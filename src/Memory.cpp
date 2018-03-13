@@ -95,3 +95,9 @@ void Memory::PutData(unsigned short seg, unsigned short start, std::vector<unsig
 		data_[offset + i] = data[i];
 	}
 }
+
+unsigned char Memory::GetChar(unsigned short seg, unsigned short offset) const
+{
+	size_t realOffset = seg * 16 + offset;
+	return data_[realOffset];
+}

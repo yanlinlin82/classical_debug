@@ -15,6 +15,8 @@ public:
 	void Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short srcEnd,
 			unsigned short dstSeg, unsigned short dstStart);
 	void PutData(unsigned short srcSeg, unsigned short srcStart, std::vector<unsigned char> data);
+
+	unsigned char GetChar(unsigned short seg, unsigned short offset) const;
 private:
 	std::vector<unsigned char> data_;
 };
