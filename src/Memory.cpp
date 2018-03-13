@@ -119,3 +119,16 @@ void Memory::SearchData(unsigned short seg, unsigned short start, unsigned short
 		}
 	}
 }
+
+void Memory::FillData(unsigned short seg, unsigned short start, unsigned short end,
+		const std::vector<unsigned char>& data)
+{
+	size_t i = 0;
+	for (unsigned short offset = start; ; ++offset, ++i) {
+		size_t realOffset = seg * 16 + offset;
+		data_[realOffset] = data[i % data.size()];
+		if (offset == end) {
+			break;
+		}
+	}
+}
