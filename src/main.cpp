@@ -349,12 +349,20 @@ void SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t
 	}
 	std::vector<unsigned char> data;
 	for (size_t i = 3; i < words.size(); ++i) {
-		unsigned char x;
-		if (!ParseHex(words[i].second, x)) {
-			ShowError(words[i].first + errPos, errInfo.c_str());
-			return;
+		if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
+			for (size_t j = 0; j < words[i].second.size(); ++j) {
+				if (words[i].second[j] != words[i].second[0]) {
+					data.push_back(words[i].second[j]);
+				}
+			}
+		} else {
+			unsigned char x;
+			if (!ParseHex(words[i].second, x)) {
+				ShowError(words[i].first + errPos, errInfo.c_str());
+				return;
+			}
+			data.push_back(x);
 		}
-		data.push_back(x);
 	}
 	memory.SearchData(seg, start, end, data);
 }
@@ -519,23 +527,47 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 
 std::vector<std::pair<size_t, std::string>> SplitCommand(const std::string& cmd)
 {
-	const static std::string WHITE_CHARS = " \t\r\n";
 	std::vector<std::pair<size_t, std::string>> words;
-	std::string::size_type pos = 0;
-	while (pos != std::string::npos) {
-		std::string::size_type start = cmd.find_first_not_of(WHITE_CHARS, pos);
-		if (start == std::string::npos) {
-			break;
-		}
-		std::string::size_type end = cmd.find_first_of(WHITE_CHARS, start);
-		std::string word = cmd.substr(start, end - start);
-		if (words.empty() && word.size() > 1) {
-			words.push_back(std::make_pair(start, word.substr(0, 1)));
-			words.push_back(std::make_pair(start + 1, word.substr(1)));
+	size_t pos = 0;
+	std::string word = "";
+	char quote = '\0';
+	for (size_t i = 0; i < cmd.size(); ++i) {
+		char c = cmd[i];
+		if (quote == '\0' && (c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
+			if (!word.empty()) {
+				words.push_back(std::make_pair(pos, word));
+			}
+			word = "";
 		} else {
-			words.push_back(std::make_pair(start, word));
+			if (word.empty()) {
+				pos = i;
+			}
+			if (c == '\'' || c == '\"') {
+				word += c;
+				if (quote == '\0') {
+					quote = c;
+				} else {
+					quote = '\0';
+				}
+			} else if (c == '\\') {
+				if (i + 1 >= cmd.size()) {
+					break;
+				}
+				switch (cmd[++i]) {
+				case 'r': word += '\r'; break;
+				case 'n': word += '\n'; break;
+				case '\\': word += '\\'; break;
+				case '\'': word += '\''; break;
+				case '\"': word += '\"'; break;
+				default: word += cmd[i + 1]; break;
+				}
+			} else {
+				word += c;
+			}
 		}
-		pos = end;
+	}
+	if (!word.empty()) {
+		words.push_back(std::make_pair(pos, word));
 	}
 #if 0
 	std::cerr << "[DEBUG] Split: '" << cmd << "' =>\n";
