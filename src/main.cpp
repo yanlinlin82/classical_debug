@@ -108,15 +108,6 @@ void PrintUsage()
 	printf("write        W address drive sector number\n");
 }
 
-void PrintUsageEMS()
-{
-	printf("Expanded memory (EMS) commands:\n");
-	printf("  Allocate      XA count\n");
-	printf("  Deallocate    XD handle\n");
-	printf("  Map memory    XM logical-page physical-page handle\n");
-	printf("  Show status   XS\n");
-}
-
 void ShowError(size_t space, const char* fmt, ...)
 {
 	va_list vl;
@@ -493,11 +484,6 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		exit(0);
 	case '?':
 		PrintUsage();
-		break;
-	case 'x':
-		if (words[2].second == "?") {
-			PrintUsageEMS();
-		}
 		break;
 	case 'c':
 		CompareMemory(words, cmdSize, registers, memory);
