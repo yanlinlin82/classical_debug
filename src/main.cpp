@@ -394,6 +394,57 @@ void FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t c
 	memory.FillData(seg, start, end, data);
 }
 
+std::string filename;
+
+void SetFilename(const std::string& f)
+{
+	filename = f;
+}
+
+void LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+{
+	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
+		return;
+	}
+	unsigned short seg, offset;
+	if (words.size() == 1) {
+		seg = curSeg;
+		offset = cursor;
+	} else {
+		size_t errPos;
+		std::string errInfo;
+		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
+			ShowError(words[1].first + errPos, errInfo.c_str());
+			return;
+		}
+	}
+	unsigned short size;
+	registers.Get("cx", size);
+	memory.Load(filename, seg, offset, size);
+}
+
+void WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+{
+	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
+		return;
+	}
+	unsigned short seg, offset;
+	if (words.size() == 1) {
+		seg = curSeg;
+		offset = cursor;
+	} else {
+		size_t errPos;
+		std::string errInfo;
+		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
+			ShowError(words[1].first + errPos, errInfo.c_str());
+			return;
+		}
+	}
+	unsigned short size;
+	registers.Get("cx", size);
+	memory.Write(filename, seg, offset, size);
+}
+
 void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
 {
 	if (words.size() > 3) {
@@ -570,6 +621,18 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		break;
 	case 'f':
 		FillData(words, cmdSize, registers, memory);
+		break;
+	case 'n':
+		if (!EnsureArgumentCount(words, cmdSize, 2, 2)) {
+			return;
+		}
+		SetFilename(words[1].second);
+		break;
+	case 'l':
+		LoadData(words, cmdSize, registers, memory);
+		break;
+	case 'w':
+		WriteData(words, cmdSize, registers, memory);
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);

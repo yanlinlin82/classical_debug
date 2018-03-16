@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include "Memory.h"
 
 Memory::Memory()
@@ -131,4 +132,48 @@ void Memory::FillData(unsigned short seg, unsigned short start, unsigned short e
 			break;
 		}
 	}
+}
+
+bool Memory::Load(const std::string& filename, unsigned short seg,
+		unsigned short offset, unsigned short& size)
+{
+	unsigned short realOffset = seg * 16 + offset;
+	size = 0;
+	FILE* fp = fopen(filename.c_str(), "r");
+	if (!fp) {
+		return false;
+	}
+	while (!feof(fp)) {
+		char buf[1024];
+		size_t n = fread(buf, 1, sizeof(buf), fp);
+		if (n > 0) {
+			memcpy(buf, &data_[realOffset], n);
+			realOffset += n;
+			size += n;
+		}
+	}
+	fclose(fp);
+	return true;
+}
+
+bool Memory::Write(const std::string& filename, unsigned short seg,
+		unsigned short offset, unsigned short size)
+{
+	unsigned short realOffset = seg * 16 + offset;
+	FILE* fp = fopen(filename.c_str(), "w");
+	if (!fp) {
+		return false;
+	}
+	unsigned short BLOCK_SIZE = 1024;
+	for (size_t i = 0; i < size; ) {
+		size_t count = size - i;
+		if (count > BLOCK_SIZE) {
+			count = BLOCK_SIZE;
+		}
+		size_t n = fwrite(&data_[realOffset], 1, count, fp);
+		realOffset += n;
+		i += n;
+	}
+	fclose(fp);
+	return true;
 }

@@ -2,6 +2,7 @@
 #define MEMORY_H__
 
 #include <vector>
+#include <string>
 
 class Memory
 {
@@ -21,6 +22,11 @@ public:
 			const std::vector<unsigned char>& data);
 	void FillData(unsigned short seg, unsigned short start, unsigned short end,
 			const std::vector<unsigned char>& data);
+
+	bool Load(const std::string& filename, unsigned short seg,
+			unsigned short offset, unsigned short& size);
+	bool Write(const std::string& filename, unsigned short seg,
+			unsigned short offset, unsigned short size);
 private:
 	std::vector<unsigned char> data_;
 };
