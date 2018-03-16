@@ -36,9 +36,3 @@ void Processor::ShowProcessorType()
 
 	std::cout << std::endl;
 }
-
-void Processor::ShowRegisters()
-{
-	registers_.Dump();
-}
-

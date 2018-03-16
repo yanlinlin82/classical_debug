@@ -9,6 +9,8 @@ public:
 	void Dump();
 	unsigned short GetDS() const { return ds; }
 	bool GetSeg(const std::string& name, unsigned short& value) const;
+	bool Get(const std::string& name, unsigned short& value) const;
+	bool Set(const std::string& name, unsigned short value);
 private:
 	unsigned short ax = 0;
 	unsigned short bx = 0;

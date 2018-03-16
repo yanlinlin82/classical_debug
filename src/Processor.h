@@ -28,13 +28,9 @@ public:
 	void SetProcessorType(ProcessorType type);
 	void SetCoProcessorType(CoProcessorType type);
 	void ShowProcessorType();
-	void ShowRegisters();
-
-	unsigned short GetDataSegment() const { return registers_.GetDS(); }
 private:
 	ProcessorType processor{ProcessorType::PT_686};
 	CoProcessorType coprocessor{CoProcessorType::CPT_387};
-	Registers registers_;
 };
 
 #endif

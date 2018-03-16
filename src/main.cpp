@@ -477,6 +477,60 @@ void HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 			static_cast<unsigned short>(a - b));
 }
 
+std::string Trim(const std::string& text)
+{
+	auto s = text;
+	auto start = s.find_first_not_of(" \t\r\n");
+	if (start == std::string::npos) {
+		s = "";
+	} else {
+		s = s.substr(start);
+	}
+	auto end = s.find_last_not_of(" \t\r\n");
+	if (end == std::string::npos) {
+		s = "";
+	} else {
+		s = s.substr(0, end + 1);
+	}
+	return s;
+}
+
+void ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers)
+{
+	if (words.size() > 3) {
+		ShowError(words[3].first, "Unexpected argument");
+		return;
+	}
+	std::string regName = words[1].second;
+	unsigned short value;
+	if (words.size() == 2) {
+		if (!registers.Get(regName, value)) {
+			ShowError(words[1].first, "Invalid register name '%s'", regName.c_str());
+			return;
+		}
+		printf("%s %04X  :", regName.c_str(), value);
+		char buf[32];
+		fgets(buf, sizeof(buf), stdin);
+		std::string s = Trim(buf);
+		if (s.empty()) {
+			return;
+		}
+		if (!ParseHex(s, value)) {
+			ShowError(10, "Invalid hex value '%s'", s.c_str());
+			return;
+		}
+	} else {
+		if (!ParseHex(words[2].second, value)) {
+			ShowError(words[2].first, "Invalid hex value '%s'", words[2].second.c_str());
+			return;
+		}
+	}
+	if (!registers.Set(regName, value)) {
+		ShowError(words[1].first, "Invalid register name '%s'", regName.c_str());
+		return;
+	}
+}
+
 void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor, Registers& registers, Memory& memory)
 {
 	switch (tolower(words[0].second[0])) {
@@ -492,7 +546,11 @@ void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cm
 		DumpMemory(words, registers, memory);
 		break;
 	case 'r':
-		processor.ShowRegisters();
+		if (words.size() == 1) {
+			registers.Dump();
+		} else {
+			ChangeRegisters(words, registers);
+		}
 		break;
 	case 'm':
 		if (words.size() == 4) {
