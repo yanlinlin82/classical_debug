@@ -266,11 +266,18 @@ void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 	std::vector<unsigned char> data;
 	if (words.size() > 2) {
 		for (size_t i = 2; i < words.size(); ++i) {
-			unsigned char value;
-			if (!ParseHex(words[i].second, value)) {
-				ShowError(words[i].first, "Invalid hex value '%s'", words[i].second.c_str());
-				return;
+			if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
+				for (size_t j = 0; j < words[i].second.size(); ++j) {
+					if (words[i].second[j] != words[i].second[0]) {
+						data.push_back(words[i].second[j]);
+					}
+				}
 			} else {
+				unsigned char value;
+				if (!ParseHex(words[i].second, value)) {
+					ShowError(words[i].first, "Invalid hex value '%s'", words[i].second.c_str());
+					return;
+				}
 				data.push_back(value);
 			}
 		}
@@ -535,7 +542,12 @@ std::vector<std::pair<size_t, std::string>> SplitCommand(const std::string& cmd)
 		char c = cmd[i];
 		if (quote == '\0' && (c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
 			if (!word.empty()) {
-				words.push_back(std::make_pair(pos, word));
+				if (words.empty() && word.size() > 1) {
+					words.push_back(std::make_pair(pos, word.substr(0, 1)));
+					words.push_back(std::make_pair(pos + 1, word.substr(1)));
+				} else {
+					words.push_back(std::make_pair(pos, word));
+				}
 			}
 			word = "";
 		} else {
@@ -567,7 +579,12 @@ std::vector<std::pair<size_t, std::string>> SplitCommand(const std::string& cmd)
 		}
 	}
 	if (!word.empty()) {
-		words.push_back(std::make_pair(pos, word));
+		if (words.empty() && word.size() > 1) {
+			words.push_back(std::make_pair(pos, word.substr(0, 1)));
+			words.push_back(std::make_pair(pos + 1, word.substr(1)));
+		} else {
+			words.push_back(std::make_pair(pos, word));
+		}
 	}
 #if 0
 	std::cerr << "[DEBUG] Split: '" << cmd << "' =>\n";
