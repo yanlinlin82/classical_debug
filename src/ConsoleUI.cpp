@@ -182,22 +182,22 @@ bool ParseAddress(const std::string& s, unsigned short& seg, unsigned short& off
 	return true;
 }
 
-bool ConsoleUI::EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, size_t min, size_t max)
+bool ConsoleUI::EnsureArgumentCount(const Command& cmd, size_t min, size_t max)
 {
-	if (words.size() < min) {
-		ShowError(cmdSize, "Missing argument");
+	if (cmd.GetWords().size() < min) {
+		ShowError(cmd.GetCmdSize(), "Missing argument");
 		return false;
-	} else if (words.size() > max) {
-		ShowError(words.back().first, "Unexpected argument");
+	} else if (cmd.GetWords().size() > max) {
+		ShowError(cmd.GetWords().back().first, "Unexpected argument");
 		return false;
 	} else {
 		return true;
 	}
 }
 
-void ConsoleUI::CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::CompareMemory(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (!EnsureArgumentCount(words, cmdSize, 4, 4)) {
+	if (!EnsureArgumentCount(cmd, 4, 4)) {
 		return;
 	}
 
@@ -205,26 +205,27 @@ void ConsoleUI::CompareMemory(const std::vector<std::pair<size_t, std::string>>&
 	unsigned short dstSeg, dstStart;
 	size_t errPos;
 	std::string errInfo;
-	if (!ParseAddress(words[1].second, srcSeg, srcStart, errPos, errInfo, registers)) {
-		ShowError(words[1].first + errPos, errInfo.c_str());
+	if (!ParseAddress(cmd.GetWords()[1].second, srcSeg, srcStart, errPos, errInfo, registers)) {
+		ShowError(cmd.GetWords()[1].first + errPos, errInfo.c_str());
 		return;
 	}
-	if (!ParseOffset(words[2].second, srcEnd, errPos, errInfo)) {
-		ShowError(words[2].first + errPos, errInfo.c_str());
+	if (!ParseOffset(cmd.GetWords()[2].second, srcEnd, errPos, errInfo)) {
+		ShowError(cmd.GetWords()[2].first + errPos, errInfo.c_str());
 		return;
 	}
-	if (!ParseAddress(words[3].second, dstSeg, dstStart, errPos, errInfo, registers)) {
-		ShowError(words[3].first + errPos, errInfo.c_str());
+	if (!ParseAddress(cmd.GetWords()[3].second, dstSeg, dstStart, errPos, errInfo, registers)) {
+		ShowError(cmd.GetWords()[3].first + errPos, errInfo.c_str());
 		return;
 	}
 	memory.Compare(srcSeg, srcStart, srcEnd, dstSeg, dstStart);
 }
 
-void ConsoleUI::CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
+void ConsoleUI::CopyMemory(const Command& cmd, Registers& registers, Memory& memory)
 {
 	unsigned short seg, start, end, dstSeg, dstStart;
 	size_t errPos;
 	std::string errInfo;
+	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
 		return;
@@ -240,22 +241,23 @@ void ConsoleUI::CopyMemory(const std::vector<std::pair<size_t, std::string>>& wo
 	memory.Copy(seg, start, end, dstSeg, dstStart);
 }
 
-void ConsoleUI::EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::EnterData(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (words.size() < 2) {
-		ShowError(cmdSize, "Missing argument");
+	if (cmd.GetWords().size() < 2) {
+		ShowError(cmd.GetCmdSize(), "Missing argument");
 		return;
 	}
 	unsigned short seg, start;
 	size_t errPos;
 	std::string errInfo;
+	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
 		return;
 	}
 	std::vector<unsigned char> data;
-	if (words.size() > 2) {
-		for (size_t i = 2; i < words.size(); ++i) {
+	if (cmd.GetWords().size() > 2) {
+		for (size_t i = 2; i < cmd.GetWords().size(); ++i) {
 			if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
 				for (size_t j = 0; j < words[i].second.size(); ++j) {
 					if (words[i].second[j] != words[i].second[0]) {
@@ -327,15 +329,16 @@ void ConsoleUI::EnterData(const std::vector<std::pair<size_t, std::string>>& wor
 	memory.PutData(seg, start, data);
 }
 
-void ConsoleUI::SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::SearchData(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (words.size() < 4) {
-		ShowError(cmdSize, "Missing argument");
+	if (cmd.GetWords().size() < 4) {
+		ShowError(cmd.GetCmdSize(), "Missing argument");
 		return;
 	}
 	unsigned short seg, start, end;
 	size_t errPos;
 	std::string errInfo;
+	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
 		return;
@@ -345,7 +348,7 @@ void ConsoleUI::SearchData(const std::vector<std::pair<size_t, std::string>>& wo
 		return;
 	}
 	std::vector<unsigned char> data;
-	for (size_t i = 3; i < words.size(); ++i) {
+	for (size_t i = 3; i < cmd.GetWords().size(); ++i) {
 		if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
 			for (size_t j = 0; j < words[i].second.size(); ++j) {
 				if (words[i].second[j] != words[i].second[0]) {
@@ -364,15 +367,16 @@ void ConsoleUI::SearchData(const std::vector<std::pair<size_t, std::string>>& wo
 	memory.SearchData(seg, start, end, data);
 }
 
-void ConsoleUI::FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::FillData(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (words.size() < 4) {
-		ShowError(cmdSize, "Missing argument");
+	if (cmd.GetWords().size() < 4) {
+		ShowError(cmd.GetCmdSize(), "Missing argument");
 		return;
 	}
 	unsigned short seg, start, end;
 	size_t errPos;
 	std::string errInfo;
+	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
 		return;
@@ -382,7 +386,7 @@ void ConsoleUI::FillData(const std::vector<std::pair<size_t, std::string>>& word
 		return;
 	}
 	std::vector<unsigned char> data;
-	for (size_t i = 3; i < words.size(); ++i) {
+	for (size_t i = 3; i < cmd.GetWords().size(); ++i) {
 		unsigned char x;
 		if (!ParseHex(words[i].second, x)) {
 			ShowError(words[i].first + errPos, errInfo.c_str());
@@ -398,18 +402,19 @@ void ConsoleUI::SetFilename(const std::string& f)
 	filename_ = f;
 }
 
-void ConsoleUI::LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::LoadData(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
+	if (!EnsureArgumentCount(cmd, 1, 2)) {
 		return;
 	}
 	unsigned short seg, offset;
-	if (words.size() == 1) {
+	if (cmd.GetWords().size() == 1) {
 		seg = curSeg_;
 		offset = cursor_;
 	} else {
 		size_t errPos;
 		std::string errInfo;
+		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
 			return;
@@ -420,18 +425,19 @@ void ConsoleUI::LoadData(const std::vector<std::pair<size_t, std::string>>& word
 	memory.Load(filename_, seg, offset, size);
 }
 
-void ConsoleUI::WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::WriteData(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
+	if (!EnsureArgumentCount(cmd, 1, 2)) {
 		return;
 	}
 	unsigned short seg, offset;
-	if (words.size() == 1) {
+	if (cmd.GetWords().size() == 1) {
 		seg = curSeg_;
 		offset = cursor_;
 	} else {
 		size_t errPos;
 		std::string errInfo;
+		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
 			return;
@@ -442,26 +448,28 @@ void ConsoleUI::WriteData(const std::vector<std::pair<size_t, std::string>>& wor
 	memory.Write(filename_, seg, offset, size);
 }
 
-void ConsoleUI::DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
+void ConsoleUI::DumpMemory(const Command& cmd, Registers& registers, Memory& memory)
 {
-	if (words.size() > 3) {
+	if (cmd.GetWords().size() > 3) {
+		auto words = cmd.GetWords();
 		ShowError(words[3].first, "Unexpected argument");
 		return;
 	}
 
 	unsigned short seg, start, end;
-	if (words.size() == 1) {
+	if (cmd.GetWords().size() == 1) {
 		seg = curSeg_;
 		start = cursor_;
 		end = start + 0x80 - 1;
 	} else {
 		size_t errPos;
 		std::string errInfo;
+		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
 			return;
 		}
-		if (words.size() > 2) {
+		if (cmd.GetWords().size() > 2) {
 			if (!ParseOffset(words[2].second, end, errPos, errInfo)) {
 				ShowError(words[2].first + errPos, errInfo.c_str());
 				return;
@@ -475,11 +483,12 @@ void ConsoleUI::DumpMemory(const std::vector<std::pair<size_t, std::string>>& wo
 	cursor_ = end + 1;
 }
 
-void ConsoleUI::SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& words, Processor& processor)
+void ConsoleUI::SwitchProcessorType(const Command& cmd, Processor& processor)
 {
-	if (words.size() == 1 || words[1].second == "?") {
+	auto words = cmd.GetWords();
+	if (cmd.GetWords().size() == 1 || words[1].second == "?") {
 		processor.ShowProcessorType();
-	} else if (words.size() > 2) {
+	} else if (cmd.GetWords().size() > 2) {
 		ShowError(words[2].first, "Unexpected argument");
 	} else if (words[1].second == "0") {
 		processor.SetProcessorType(ProcessorType::PT_8086);
@@ -506,12 +515,13 @@ void ConsoleUI::SwitchProcessorType(const std::vector<std::pair<size_t, std::str
 	}
 }
 
-void ConsoleUI::HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize)
+void ConsoleUI::HexCalc(const Command& cmd)
 {
-	if (!EnsureArgumentCount(words, cmdSize, 3, 3)) {
+	if (!EnsureArgumentCount(cmd, 3, 3)) {
 		return;
 	}
 	unsigned short a, b;
+	auto words = cmd.GetWords();
 	if (!ParseHex(words[1].second, a)) {
 		ShowError(words[1].first, "Unexpected hex value '%s'", words[1].second.c_str());
 		return;
@@ -543,15 +553,16 @@ std::string Trim(const std::string& text)
 	return s;
 }
 
-void ConsoleUI::ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers)
+void ConsoleUI::ChangeRegisters(const Command& cmd, Registers& registers)
 {
-	if (words.size() > 3) {
+	auto words = cmd.GetWords();
+	if (cmd.GetWords().size() > 3) {
 		ShowError(words[3].first, "Unexpected argument");
 		return;
 	}
 	std::string regName = words[1].second;
 	unsigned short value;
-	if (words.size() == 2) {
+	if (cmd.GetWords().size() == 2) {
 		if (!registers.Get(regName, value)) {
 			ShowError(words[1].first, "Invalid register name '%s'", regName.c_str());
 			return;
@@ -585,7 +596,6 @@ void ConsoleUI::Process(const Command& cmd, Processor& processor)
 		return;
 	}
 	auto words = cmd.GetWords();
-	auto cmdSize = cmd.GetCmdSize();
 
 	switch (tolower(words[0].second[0])) {
 	case 'q':
@@ -594,48 +604,48 @@ void ConsoleUI::Process(const Command& cmd, Processor& processor)
 		PrintUsage();
 		break;
 	case 'c':
-		CompareMemory(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		CompareMemory(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'd':
-		DumpMemory(words, processor.GetRegisters(), processor.GetMemory());
+		DumpMemory(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'r':
-		if (words.size() == 1) {
+		if (cmd.GetWords().size() == 1) {
 			processor.GetRegisters().Dump();
 		} else {
-			ChangeRegisters(words, processor.GetRegisters());
+			ChangeRegisters(cmd, processor.GetRegisters());
 		}
 		break;
 	case 'm':
-		if (words.size() == 4) {
-			CopyMemory(words, processor.GetRegisters(), processor.GetMemory());
+		if (cmd.GetWords().size() == 4) {
+			CopyMemory(cmd, processor.GetRegisters(), processor.GetMemory());
 		} else {
-			SwitchProcessorType(words, processor);
+			SwitchProcessorType(cmd, processor);
 		}
 		break;
 	case 'h':
-		HexCalc(words, cmdSize);
+		HexCalc(cmd);
 		break;
 	case 'e':
-		EnterData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		EnterData(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 's':
-		SearchData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		SearchData(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'f':
-		FillData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		FillData(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'n':
-		if (!EnsureArgumentCount(words, cmdSize, 2, 2)) {
+		if (!EnsureArgumentCount(cmd, 2, 2)) {
 			return;
 		}
 		SetFilename(words[1].second);
 		break;
 	case 'l':
-		LoadData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		LoadData(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'w':
-		WriteData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
+		WriteData(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);

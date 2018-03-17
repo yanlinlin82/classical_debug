@@ -16,26 +16,25 @@ public:
 
 	Command GetCommand();
 
-	void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor);
 	void Process(const Command& cmd, Processor& processor);
 
 	void ShowError(size_t space, const char* fmt, ...);
 private:
-	bool EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, size_t min, size_t max);
+	bool EnsureArgumentCount(const Command& cmd, size_t min, size_t max);
 
-	void CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
-	void CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory);
-	void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
-	void SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
-	void FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
+	void CompareMemory(const Command& cmd, Registers& registers, Memory& memory);
+	void CopyMemory(const Command& cmd, Registers& registers, Memory& memory);
+	void EnterData(const Command& cmd, Registers& registers, Memory& memory);
+	void SearchData(const Command& cmd, Registers& registers, Memory& memory);
+	void FillData(const Command& cmd, Registers& registers, Memory& memory);
 
 	void SetFilename(const std::string& f);
-	void LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
-	void WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory);
-	void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory);
-	void SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& words, Processor& processor);
-	void HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize);
-	void ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers);
+	void LoadData(const Command& cmd, Registers& registers, Memory& memory);
+	void WriteData(const Command& cmd, Registers& registers, Memory& memory);
+	void DumpMemory(const Command& cmd, Registers& registers, Memory& memory);
+	void SwitchProcessorType(const Command& cmd, Processor& processor);
+	void HexCalc(const Command& cmd);
+	void ChangeRegisters(const Command& cmd, Registers& registers);
 
 	static void PrintUsage();
 
