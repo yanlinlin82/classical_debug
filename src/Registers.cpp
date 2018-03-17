@@ -5,10 +5,10 @@
 void Registers::Dump()
 {
 	printf("AX=%04X  BX=%04X  CX=%04X  DX=%04X  SP=%04X  BP=%04X  SI=%04X  DI=%04X\n",
-			ax, bx, cx, dx, sp, bp, si, di);
+			regs_[AX], regs_[BX], regs_[CX], regs_[DX], regs_[SP], regs_[BP], regs_[SI], regs_[DI]);
 	printf("DS=%04X  ES=%04X  SS=%04X  CS=%04X  IP=%04X   NV UP DI PL NZ NA PO NC\n",
-			ds, es, ss, cs, ip);
-	printf("%04X:%04X F60000        TEST    BYTE PTR [BX+SI],00                  DS:0000=CD\n", cs, ip);
+			regs_[DS], regs_[ES], regs_[SS], regs_[CS], regs_[IP]);
+	printf("%04X:%04X F60000        TEST    BYTE PTR [BX+SI],00                  DS:0000=CD\n", regs_[CS], regs_[IP]);
 }
 
 std::string ToUpper(const std::string& s)
@@ -24,13 +24,13 @@ bool Registers::GetSeg(const std::string& name, unsigned short& value) const
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
-		value = ds;
+		value = regs_[DS];
 	} else if (uname == "ES") {
-		value = es;
+		value = regs_[ES];
 	} else if (uname == "SS") {
-		value = ss;
+		value = regs_[SS];
 	} else if (uname == "CS") {
-		value = cs;
+		value = regs_[CS];
 	} else {
 		return false;
 	}
@@ -41,31 +41,31 @@ bool Registers::Get(const std::string& name, unsigned short& value) const
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
-		value = ds;
+		value = regs_[DS];
 	} else if (uname == "ES") {
-		value = es;
+		value = regs_[ES];
 	} else if (uname == "SS") {
-		value = ss;
+		value = regs_[SS];
 	} else if (uname == "CS") {
-		value = cs;
+		value = regs_[CS];
 	} else if (uname == "IP") {
-		value = ip;
+		value = regs_[IP];
 	} else if (uname == "AX") {
-		value = ax;
+		value = regs_[AX];
 	} else if (uname == "BX") {
-		value = bx;
+		value = regs_[BX];
 	} else if (uname == "CX") {
-		value = cx;
+		value = regs_[CX];
 	} else if (uname == "DX") {
-		value = dx;
+		value = regs_[DX];
 	} else if (uname == "SP") {
-		value = sp;
+		value = regs_[SP];
 	} else if (uname == "BP") {
-		value = bp;
+		value = regs_[BP];
 	} else if (uname == "SI") {
-		value = si;
+		value = regs_[SI];
 	} else if (uname == "DI") {
-		value = di;
+		value = regs_[DI];
 	} else {
 		return false;
 	}
@@ -76,31 +76,31 @@ bool Registers::Set(const std::string& name, unsigned short value)
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
-		ds = value;
+		regs_[DS] = value;
 	} else if (uname == "ES") {
-		es = value;
+		regs_[DS] = value;
 	} else if (uname == "SS") {
-		ss = value;
+		regs_[SS] = value;
 	} else if (uname == "CS") {
-		cs = value;
+		regs_[CS] = value;
 	} else if (uname == "IP") {
-		ip = value;
+		regs_[IP] = value;
 	} else if (uname == "AX") {
-		ax = value;
+		regs_[AX] = value;
 	} else if (uname == "BX") {
-		bx = value;
+		regs_[BX] = value;
 	} else if (uname == "CX") {
-		cx = value;
+		regs_[CX] = value;
 	} else if (uname == "DX") {
-		dx = value;
+		regs_[DX] = value;
 	} else if (uname == "SP") {
-		sp = value;
+		regs_[SP] = value;
 	} else if (uname == "BP") {
-		bp = value;
+		regs_[BP] = value;
 	} else if (uname == "SI") {
-		si = value;
+		regs_[SI] = value;
 	} else if (uname == "DI") {
-		di = value;
+		regs_[DI] = value;
 	} else {
 		return false;
 	}

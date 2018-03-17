@@ -18,7 +18,7 @@ public:
 
 	std::vector<std::pair<size_t, std::string>> SplitCommand(const std::string& cmd);
 
-	void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor, Registers& registers, Memory& memory);
+	void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor);
 };
 
 #endif

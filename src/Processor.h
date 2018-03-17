@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Registers.h"
+#include "Memory.h"
 
 enum class ProcessorType
 {
@@ -28,9 +29,18 @@ public:
 	void SetProcessorType(ProcessorType type);
 	void SetCoProcessorType(CoProcessorType type);
 	void ShowProcessorType();
+
+	Registers& GetRegisters() { return registers_; }
+	Memory& GetMemory() { return memory_; }
+
+	const Registers& GetRegisters() const { return registers_; }
+	const Memory& GetMemory() const { return memory_; }
 private:
 	ProcessorType processor{ProcessorType::PT_686};
 	CoProcessorType coprocessor{CoProcessorType::CPT_387};
+private:
+	Registers registers_;
+	Memory memory_;
 };
 
 #endif

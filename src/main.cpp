@@ -1,17 +1,13 @@
 #include <iostream>
 #include "ConsoleUI.h"
 #include "Processor.h"
-#include "Registers.h"
-#include "Memory.h"
 
 int main(int argc, char* const* argv)
 {
 	Processor processor;
-	Registers registers;
-	Memory memory;
 
 	ConsoleUI ui;
-	if (!ui.Init(registers)) {
+	if (!ui.Init(processor.GetRegisters())) {
 		std::cerr << "Error: Failed to initialize console UI!" << std::endl;
 		return 1;
 	}
@@ -21,7 +17,7 @@ int main(int argc, char* const* argv)
 		std::string cmd = ui.ReadLine();
 		auto words = ui.SplitCommand(cmd);
 		if (!words.empty()) {
-			ui.Process(words, cmd.size(), processor, registers, memory);
+			ui.Process(words, cmd.size(), processor);
 		}
 	}
 	return 0;

@@ -578,7 +578,7 @@ void ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, R
 	}
 }
 
-void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor, Registers& registers, Memory& memory)
+void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor)
 {
 	switch (tolower(words[0].second[0])) {
 	case 'q':
@@ -587,21 +587,21 @@ void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words
 		PrintUsage();
 		break;
 	case 'c':
-		CompareMemory(words, cmdSize, registers, memory);
+		CompareMemory(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'd':
-		DumpMemory(words, registers, memory);
+		DumpMemory(words, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'r':
 		if (words.size() == 1) {
-			registers.Dump();
+			processor.GetRegisters().Dump();
 		} else {
-			ChangeRegisters(words, registers);
+			ChangeRegisters(words, processor.GetRegisters());
 		}
 		break;
 	case 'm':
 		if (words.size() == 4) {
-			CopyMemory(words, registers, memory);
+			CopyMemory(words, processor.GetRegisters(), processor.GetMemory());
 		} else {
 			SwitchProcessorType(words, processor);
 		}
@@ -610,13 +610,13 @@ void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words
 		HexCalc(words, cmdSize);
 		break;
 	case 'e':
-		EnterData(words, cmdSize, registers, memory);
+		EnterData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 's':
-		SearchData(words, cmdSize, registers, memory);
+		SearchData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'f':
-		FillData(words, cmdSize, registers, memory);
+		FillData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'n':
 		if (!EnsureArgumentCount(words, cmdSize, 2, 2)) {
@@ -625,10 +625,10 @@ void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words
 		SetFilename(words[1].second);
 		break;
 	case 'l':
-		LoadData(words, cmdSize, registers, memory);
+		LoadData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	case 'w':
-		WriteData(words, cmdSize, registers, memory);
+		WriteData(words, cmdSize, processor.GetRegisters(), processor.GetMemory());
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);
