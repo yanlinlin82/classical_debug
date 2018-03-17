@@ -1,5 +1,6 @@
 project('classical_debug', 'cpp')
 executable('debug', [
+  'src/Console.cpp',
   'src/Command.cpp',
   'src/ConsoleUI.cpp',
   'src/Processor.cpp',

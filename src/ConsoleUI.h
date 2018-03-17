@@ -17,9 +17,8 @@ public:
 	Command GetCommand();
 
 	void Process(const Command& cmd, Processor& processor);
-
-	void ShowError(size_t space, const char* fmt, ...);
 private:
+	void ShowError(size_t space, const char* fmt, ...);
 	bool EnsureArgumentCount(const Command& cmd, size_t min, size_t max);
 
 	void CompareMemory(const Command& cmd, Registers& registers, Memory& memory);
@@ -37,11 +36,6 @@ private:
 	void ChangeRegisters(const Command& cmd, Registers& registers);
 
 	static void PrintUsage();
-
-	enum NonBlock { NB_ENABLE, NB_DISABLE };
-	static void SetNonBlock(NonBlock state);
-	static int KeyboardHit();
-	static int GetInputChar();
 private:
 	void ShowPrompt() const;
 	std::string ReadLine();
