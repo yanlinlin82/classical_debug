@@ -13,12 +13,8 @@ int main(int argc, char* const* argv)
 	}
 
 	for (;;) {
-		ui.ShowPrompt();
-		std::string cmd = ui.ReadLine();
-		auto words = ui.SplitCommand(cmd);
-		if (!words.empty()) {
-			ui.Process(words, cmd.size(), processor);
-		}
+		auto cmd = ui.GetCommand();
+		ui.Process(cmd, processor);
 	}
 	return 0;
 }

@@ -60,6 +60,15 @@ static std::string prompt = "-";
 unsigned short curSeg;
 unsigned short cursor = 0x100;
 
+Command ConsoleUI::GetCommand()
+{
+	ShowPrompt();
+	std::string line = ReadLine();
+	Command cmd;
+	cmd.Parse(line);
+	return cmd;
+}
+
 void ConsoleUI::ShowPrompt()
 {
 	std::cout << prompt << std::flush;
@@ -578,8 +587,14 @@ void ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, R
 	}
 }
 
-void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor)
+void ConsoleUI::Process(const Command& cmd, Processor& processor)
 {
+	if (cmd.IsEmpty()) {
+		return;
+	}
+	auto words = cmd.GetWords();
+	auto cmdSize = cmd.GetCmdSize();
+
 	switch (tolower(words[0].second[0])) {
 	case 'q':
 		exit(0);
@@ -633,70 +648,6 @@ void ConsoleUI::Process(const std::vector<std::pair<size_t, std::string>>& words
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);
 	}
-}
-
-std::vector<std::pair<size_t, std::string>> ConsoleUI::SplitCommand(const std::string& cmd)
-{
-	std::vector<std::pair<size_t, std::string>> words;
-	size_t pos = 0;
-	std::string word = "";
-	char quote = '\0';
-	for (size_t i = 0; i < cmd.size(); ++i) {
-		char c = cmd[i];
-		if (quote == '\0' && (c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
-			if (!word.empty()) {
-				if (words.empty() && word.size() > 1) {
-					words.push_back(std::make_pair(pos, word.substr(0, 1)));
-					words.push_back(std::make_pair(pos + 1, word.substr(1)));
-				} else {
-					words.push_back(std::make_pair(pos, word));
-				}
-			}
-			word = "";
-		} else {
-			if (word.empty()) {
-				pos = i;
-			}
-			if (c == '\'' || c == '\"') {
-				word += c;
-				if (quote == '\0') {
-					quote = c;
-				} else {
-					quote = '\0';
-				}
-			} else if (c == '\\') {
-				if (i + 1 >= cmd.size()) {
-					break;
-				}
-				switch (cmd[++i]) {
-				case 'r': word += '\r'; break;
-				case 'n': word += '\n'; break;
-				case '\\': word += '\\'; break;
-				case '\'': word += '\''; break;
-				case '\"': word += '\"'; break;
-				default: word += cmd[i + 1]; break;
-				}
-			} else {
-				word += c;
-			}
-		}
-	}
-	if (!word.empty()) {
-		if (words.empty() && word.size() > 1) {
-			words.push_back(std::make_pair(pos, word.substr(0, 1)));
-			words.push_back(std::make_pair(pos + 1, word.substr(1)));
-		} else {
-			words.push_back(std::make_pair(pos, word));
-		}
-	}
-#if 0
-	std::cerr << "[DEBUG] Split: '" << cmd << "' =>\n";
-	for (auto x : words) {
-		std::cerr << "[DEBUG]    (pos = " << x.first << "): '" << x.second << "'\n";
-	}
-	std::cerr << std::flush;
-#endif
-	return words;
 }
 
 bool ConsoleUI::Init(const Registers& registers)

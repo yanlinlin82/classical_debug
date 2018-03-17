@@ -7,18 +7,22 @@
 #include "Processor.h"
 #include "Registers.h"
 #include "Memory.h"
+#include "Command.h"
 
 class ConsoleUI
 {
 public:
 	bool Init(const Registers& registers);
 
-	void ShowPrompt();
+	Command GetCommand();
+
 	std::string ReadLine();
 
-	std::vector<std::pair<size_t, std::string>> SplitCommand(const std::string& cmd);
-
 	void Process(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Processor& processor);
+	void Process(const Command& cmd, Processor& processor);
+
+private:
+	void ShowPrompt();
 };
 
 #endif
