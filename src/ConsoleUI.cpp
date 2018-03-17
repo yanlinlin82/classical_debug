@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "ConsoleUI.h"
 
-int kbhit()
+int ConsoleUI::KeyboardHit()
 {
 	struct timeval tv;
 	fd_set fds;
@@ -21,9 +21,7 @@ int kbhit()
 	return FD_ISSET(STDIN_FILENO, &fds);
 }
 
-enum { NB_ENABLE, NB_DISABLE };
-
-void nonblock(int state)
+void ConsoleUI::SetNonBlock(ConsoleUI::NonBlock state)
 {
 	struct termios ttystate;
 
@@ -43,22 +41,18 @@ void nonblock(int state)
 	tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
 }
 
-int get_input_char()
+int ConsoleUI::GetInputChar()
 {
-	nonblock(NB_ENABLE);
+	SetNonBlock(NB_ENABLE);
 	for (;;) {
-		if (kbhit()) {
+		if (KeyboardHit()) {
 			int c = fgetc(stdin);
-			nonblock(NB_DISABLE);
+			SetNonBlock(NB_DISABLE);
 			return c;
 		}
 		usleep(0);
 	}
 }
-
-static std::string prompt = "-";
-unsigned short curSeg;
-unsigned short cursor = 0x100;
 
 Command ConsoleUI::GetCommand()
 {
@@ -69,9 +63,9 @@ Command ConsoleUI::GetCommand()
 	return cmd;
 }
 
-void ConsoleUI::ShowPrompt()
+void ConsoleUI::ShowPrompt() const
 {
-	std::cout << prompt << std::flush;
+	std::cout << prompt_ << std::flush;
 }
 
 std::string ConsoleUI::ReadLine()
@@ -86,7 +80,7 @@ std::string ConsoleUI::ReadLine()
 	return buffer;
 }
 
-void PrintUsage()
+void ConsoleUI::PrintUsage()
 {
 	printf("Classical Debug (v0.01)\n");
 	printf("Altering memory:\n");
@@ -113,11 +107,11 @@ void PrintUsage()
 	printf("write        W address drive sector number\n");
 }
 
-void ShowError(size_t space, const char* fmt, ...)
+void ConsoleUI::ShowError(size_t space, const char* fmt, ...)
 {
 	va_list vl;
 	va_start(vl, fmt);
-	for (size_t i = 0; i < prompt.size() + space; ++i) {
+	for (size_t i = 0; i < prompt_.size() + space; ++i) {
 		fprintf(stdout, " ");
 	}
 	fprintf(stdout, "^ Error: ");
@@ -188,7 +182,7 @@ bool ParseAddress(const std::string& s, unsigned short& seg, unsigned short& off
 	return true;
 }
 
-bool EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, size_t min, size_t max)
+bool ConsoleUI::EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, size_t min, size_t max)
 {
 	if (words.size() < min) {
 		ShowError(cmdSize, "Missing argument");
@@ -201,7 +195,7 @@ bool EnsureArgumentCount(const std::vector<std::pair<size_t, std::string>>& word
 	}
 }
 
-void CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (!EnsureArgumentCount(words, cmdSize, 4, 4)) {
 		return;
@@ -226,7 +220,7 @@ void CompareMemory(const std::vector<std::pair<size_t, std::string>>& words, siz
 	memory.Compare(srcSeg, srcStart, srcEnd, dstSeg, dstStart);
 }
 
-void CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
+void ConsoleUI::CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
 {
 	unsigned short seg, start, end, dstSeg, dstStart;
 	size_t errPos;
@@ -246,7 +240,7 @@ void CopyMemory(const std::vector<std::pair<size_t, std::string>>& words, Regist
 	memory.Copy(seg, start, end, dstSeg, dstStart);
 }
 
-void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (words.size() < 2) {
 		ShowError(cmdSize, "Missing argument");
@@ -291,7 +285,7 @@ void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 			printf("%02X.", oriValue);
 			fflush(stdout);
 			for (;;) {
-				int c = get_input_char();
+				int c = GetInputChar();
 				if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
 					if (word.size() < 2) {
 						printf("%c", c);
@@ -333,7 +327,7 @@ void EnterData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 	memory.PutData(seg, start, data);
 }
 
-void SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (words.size() < 4) {
 		ShowError(cmdSize, "Missing argument");
@@ -370,7 +364,7 @@ void SearchData(const std::vector<std::pair<size_t, std::string>>& words, size_t
 	memory.SearchData(seg, start, end, data);
 }
 
-void FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (words.size() < 4) {
 		ShowError(cmdSize, "Missing argument");
@@ -399,22 +393,20 @@ void FillData(const std::vector<std::pair<size_t, std::string>>& words, size_t c
 	memory.FillData(seg, start, end, data);
 }
 
-std::string filename;
-
-void SetFilename(const std::string& f)
+void ConsoleUI::SetFilename(const std::string& f)
 {
-	filename = f;
+	filename_ = f;
 }
 
-void LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
 		return;
 	}
 	unsigned short seg, offset;
 	if (words.size() == 1) {
-		seg = curSeg;
-		offset = cursor;
+		seg = curSeg_;
+		offset = cursor_;
 	} else {
 		size_t errPos;
 		std::string errInfo;
@@ -425,18 +417,18 @@ void LoadData(const std::vector<std::pair<size_t, std::string>>& words, size_t c
 	}
 	unsigned short size;
 	registers.Get("cx", size);
-	memory.Load(filename, seg, offset, size);
+	memory.Load(filename_, seg, offset, size);
 }
 
-void WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
+void ConsoleUI::WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize, Registers& registers, Memory& memory)
 {
 	if (!EnsureArgumentCount(words, cmdSize, 1, 2)) {
 		return;
 	}
 	unsigned short seg, offset;
 	if (words.size() == 1) {
-		seg = curSeg;
-		offset = cursor;
+		seg = curSeg_;
+		offset = cursor_;
 	} else {
 		size_t errPos;
 		std::string errInfo;
@@ -447,10 +439,10 @@ void WriteData(const std::vector<std::pair<size_t, std::string>>& words, size_t 
 	}
 	unsigned short size;
 	registers.Get("cx", size);
-	memory.Write(filename, seg, offset, size);
+	memory.Write(filename_, seg, offset, size);
 }
 
-void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
+void ConsoleUI::DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers, Memory& memory)
 {
 	if (words.size() > 3) {
 		ShowError(words[3].first, "Unexpected argument");
@@ -459,8 +451,8 @@ void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Regist
 
 	unsigned short seg, start, end;
 	if (words.size() == 1) {
-		seg = curSeg;
-		start = cursor;
+		seg = curSeg_;
+		start = cursor_;
 		end = start + 0x80 - 1;
 	} else {
 		size_t errPos;
@@ -479,11 +471,11 @@ void DumpMemory(const std::vector<std::pair<size_t, std::string>>& words, Regist
 		}
 	}
 	memory.Dump(seg, start, end);
-	curSeg = seg;
-	cursor = end + 1;
+	curSeg_ = seg;
+	cursor_ = end + 1;
 }
 
-void SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& words, Processor& processor)
+void ConsoleUI::SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& words, Processor& processor)
 {
 	if (words.size() == 1 || words[1].second == "?") {
 		processor.ShowProcessorType();
@@ -514,7 +506,7 @@ void SwitchProcessorType(const std::vector<std::pair<size_t, std::string>>& word
 	}
 }
 
-void HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize)
+void ConsoleUI::HexCalc(const std::vector<std::pair<size_t, std::string>>& words, size_t cmdSize)
 {
 	if (!EnsureArgumentCount(words, cmdSize, 3, 3)) {
 		return;
@@ -551,7 +543,7 @@ std::string Trim(const std::string& text)
 	return s;
 }
 
-void ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers)
+void ConsoleUI::ChangeRegisters(const std::vector<std::pair<size_t, std::string>>& words, Registers& registers)
 {
 	if (words.size() > 3) {
 		ShowError(words[3].first, "Unexpected argument");
@@ -652,6 +644,6 @@ void ConsoleUI::Process(const Command& cmd, Processor& processor)
 
 bool ConsoleUI::Init(const Registers& registers)
 {
-	curSeg = registers.GetDS();
+	curSeg_ = registers.GetDS();
 	return true;
 }
