@@ -1,6 +1,6 @@
-# classical_debug
+# Classical DEBUG Program
 
-Try to re-implement the classical debug.exe program in DOS.
+Try to re-implement the classical DEBUG.EXE in DOS.
 
 ## How to build
 
