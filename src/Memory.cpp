@@ -147,7 +147,7 @@ bool Memory::Load(const std::string& filename, unsigned short seg,
 		char buf[1024];
 		size_t n = fread(buf, 1, sizeof(buf), fp);
 		if (n > 0) {
-			memcpy(buf, &data_[realOffset], n);
+			memcpy(&data_[realOffset], buf, n);
 			realOffset += n;
 			size += n;
 		}

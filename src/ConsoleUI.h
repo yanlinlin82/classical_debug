@@ -12,7 +12,7 @@
 class ConsoleUI
 {
 public:
-	bool Init(const Registers& registers);
+	bool Init(Registers& registers, Memory& memory, const std::vector<std::string>& args);
 
 	Command GetCommand();
 
@@ -45,6 +45,7 @@ private:
 	unsigned short cursor_ = 0x100;
 
 	std::string filename_ = "";
+	std::vector<std::string> args_;
 };
 
 #endif

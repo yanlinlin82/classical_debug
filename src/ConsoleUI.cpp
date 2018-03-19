@@ -5,9 +5,20 @@
 #include "Console.h"
 #include "ConsoleUI.h"
 
-bool ConsoleUI::Init(const Registers& registers)
+bool ConsoleUI::Init(Registers& registers, Memory& memory, const std::vector<std::string>& args)
 {
 	curSeg_ = registers.GetDS();
+	if (!args.empty()) {
+		filename_ = args[0];
+		unsigned short size;
+		if (!memory.Load(filename_, curSeg_, cursor_, size)) {
+			return false;
+		}
+		registers.Set("cx", size);
+		if (args.size() > 1) {
+			args_ = std::vector<std::string>(args.begin() + 1, args.end());
+		}
+	}
 	return true;
 }
 
@@ -379,8 +390,8 @@ void ConsoleUI::LoadData(const Command& cmd, Registers& registers, Memory& memor
 		}
 	}
 	unsigned short size;
-	registers.Get("cx", size);
 	memory.Load(filename_, seg, offset, size);
+	registers.Set("cx", size);
 }
 
 void ConsoleUI::WriteData(const Command& cmd, Registers& registers, Memory& memory)

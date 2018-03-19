@@ -69,4 +69,3 @@ void Command::Dump() const
 	}
 	std::cerr << std::flush;
 }
-
