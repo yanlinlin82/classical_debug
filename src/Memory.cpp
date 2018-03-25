@@ -177,3 +177,51 @@ bool Memory::Write(const std::string& filename, unsigned short seg,
 	fclose(fp);
 	return true;
 }
+
+std::string Memory::Hex(unsigned char x)
+{
+	char buf[16] = "";
+	snprintf(buf, sizeof(buf), "%02X", x);
+	return buf;
+}
+
+bool Memory::ParseOneInstrument(const unsigned char* p, size_t& count, std::string& op, std::string& operands) const
+{
+	const char* reg[] = { "AX", "BX", "CX", "DX", "SP", "BP", "SI", "DI" };
+	if (*p >= 0x50 && *p <= 0x57) {
+		op = "PUSH";
+		operands = reg[*p - 0x50];
+		count = 1;
+	} else if (*p >= 0x58 && *p <= 0x5F) {
+		op = "POP";
+		operands = reg[*p - 0x58];
+		count = 1;
+	} else if (*p == 0x58) {
+		op = "POP";
+		operands = "AX";
+		count = 1;
+	} else {
+		op = "DB";
+		operands = Hex(*p);
+		count = 1;
+	}
+	return true;
+}
+
+bool Memory::Unassemble(unsigned short seg, unsigned short offset) const
+{
+	for (unsigned short x = offset; x < offset + 32; ) {
+		size_t count = 0;
+		std::string op;
+		std::string operands;
+		ParseOneInstrument(&data_[seg * 16 + x], count, op, operands);
+
+		std::string data;
+		for (size_t i = 0; i < count; ++i) {
+			data += Hex(data_[seg * 16 + x + i]);
+		}
+		printf("%04X:%04X %-14s%-8s%s\n", seg, x, data.c_str(), op.c_str(), operands.c_str());
+		x += count;
+	}
+	return true;
+}

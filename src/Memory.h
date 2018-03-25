@@ -27,6 +27,10 @@ public:
 			unsigned short offset, unsigned short& size);
 	bool Write(const std::string& filename, unsigned short seg,
 			unsigned short offset, unsigned short size);
+	bool Unassemble(unsigned short seg, unsigned short offset) const;
+private:
+	bool ParseOneInstrument(const unsigned char* p, size_t& count, std::string& op, std::string& operands) const;
+	static std::string Hex(unsigned char x);
 private:
 	std::vector<unsigned char> data_;
 };

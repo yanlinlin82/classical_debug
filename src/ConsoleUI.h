@@ -34,6 +34,7 @@ private:
 	void SwitchProcessorType(const Command& cmd, Processor& processor);
 	void HexCalc(const Command& cmd);
 	void ChangeRegisters(const Command& cmd, Registers& registers);
+	void Unassemble(const Command& cmd, Registers& registers, Memory& memory);
 
 	static void PrintUsage();
 private:

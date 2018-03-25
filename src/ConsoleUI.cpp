@@ -417,6 +417,27 @@ void ConsoleUI::WriteData(const Command& cmd, Registers& registers, Memory& memo
 	memory.Write(filename_, seg, offset, size);
 }
 
+void ConsoleUI::Unassemble(const Command& cmd, Registers& registers, Memory& memory)
+{
+	if (!EnsureArgumentCount(cmd, 1, 2)) {
+		return;
+	}
+	unsigned short seg, offset;
+	if (cmd.GetWords().size() == 1) {
+		seg = curSeg_;
+		offset = cursor_;
+	} else {
+		size_t errPos;
+		std::string errInfo;
+		auto words = cmd.GetWords();
+		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
+			ShowError(words[1].first + errPos, errInfo.c_str());
+			return;
+		}
+	}
+	memory.Unassemble(seg, offset);
+}
+
 void ConsoleUI::DumpMemory(const Command& cmd, Registers& registers, Memory& memory)
 {
 	if (cmd.GetWords().size() > 3) {
@@ -615,6 +636,9 @@ void ConsoleUI::Process(const Command& cmd, Processor& processor)
 		break;
 	case 'w':
 		WriteData(cmd, processor.GetRegisters(), processor.GetMemory());
+		break;
+	case 'u':
+		Unassemble(cmd, processor.GetRegisters(), processor.GetMemory());
 		break;
 	default:
 		ShowError(words[0].first, "Unsupported command '%c'", words[0].second[0]);
