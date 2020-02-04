@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
+using namespace std;
 
 enum class ProcessorType { PT_8086 = 0, PT_186, PT_286, PT_386, PT_486, PT_586, PT_686 };
 
@@ -34,9 +35,9 @@ public:
 	void Dump();
 
 	unsigned short GetDS() const { return regs_[DS]; }
-	bool GetSeg(const std::string& name, unsigned short& value) const;
-	bool Get(const std::string& name, unsigned short& value) const;
-	bool Set(const std::string& name, unsigned short value);
+	bool GetSeg(const string& name, unsigned short& value) const;
+	bool Get(const string& name, unsigned short& value) const;
+	bool Set(const string& name, unsigned short value);
 private:
 	unsigned regs_[MAX_REG_INDEX] = {
 		0, // FLAGS
@@ -56,24 +57,24 @@ public:
 			unsigned short dstSeg, unsigned short dstStart);
 	void Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short srcEnd,
 			unsigned short dstSeg, unsigned short dstStart);
-	void PutData(unsigned short srcSeg, unsigned short srcStart, std::vector<unsigned char> data);
+	void PutData(unsigned short srcSeg, unsigned short srcStart, vector<unsigned char> data);
 
 	unsigned char GetChar(unsigned short seg, unsigned short offset) const;
 	void SearchData(unsigned short seg, unsigned short start, unsigned short end,
-			const std::vector<unsigned char>& data);
+			const vector<unsigned char>& data);
 	void FillData(unsigned short seg, unsigned short start, unsigned short end,
-			const std::vector<unsigned char>& data);
+			const vector<unsigned char>& data);
 
-	bool Load(const std::string& filename, unsigned short seg,
+	bool Load(const string& filename, unsigned short seg,
 			unsigned short offset, unsigned short& size);
-	bool Write(const std::string& filename, unsigned short seg,
+	bool Write(const string& filename, unsigned short seg,
 			unsigned short offset, unsigned short size);
 	bool Unassemble(unsigned short seg, unsigned short offset) const;
 private:
-	bool ParseOneInstrument(const unsigned char* p, size_t& count, std::string& op, std::string& operands) const;
-	static std::string Hex(unsigned char x);
+	bool ParseOneInstrument(const unsigned char* p, size_t& count, string& op, string& operands) const;
+	static string Hex(unsigned char x);
 private:
-	std::vector<unsigned char> data_;
+	vector<unsigned char> data_;
 };
 
 class Processor
@@ -99,16 +100,16 @@ private:
 class Command
 {
 public:
-	void Parse(const std::string& cmd);
+	void Parse(const string& cmd);
 	void Dump() const;
 
 	bool IsEmpty() const { return words_.empty(); }
 
-	const std::vector<std::pair<size_t, std::string>> GetWords() const { return words_; }
+	const vector<pair<size_t, string>> GetWords() const { return words_; }
 	size_t GetCmdSize() const { return cmd_.size(); }
 private:
-	std::string cmd_;
-	std::vector<std::pair<size_t, std::string>> words_;
+	string cmd_;
+	vector<pair<size_t, string>> words_;
 };
 
 class Console
@@ -124,7 +125,7 @@ private:
 class ConsoleUI
 {
 public:
-	bool Init(Registers& registers, Memory& memory, const std::vector<std::string>& args);
+	bool Init(Registers& registers, Memory& memory, const vector<string>& args);
 
 	Command GetCommand();
 
@@ -139,7 +140,7 @@ private:
 	void SearchData(const Command& cmd, Registers& registers, Memory& memory);
 	void FillData(const Command& cmd, Registers& registers, Memory& memory);
 
-	void SetFilename(const std::string& f);
+	void SetFilename(const string& f);
 	void LoadData(const Command& cmd, Registers& registers, Memory& memory);
 	void WriteData(const Command& cmd, Registers& registers, Memory& memory);
 	void DumpMemory(const Command& cmd, Registers& registers, Memory& memory);
@@ -151,32 +152,32 @@ private:
 	static void PrintUsage();
 private:
 	void ShowPrompt() const;
-	std::string ReadLine();
+	string ReadLine();
 
-	std::string prompt_ = "-";
+	string prompt_ = "-";
 	unsigned short curSeg_;
 	unsigned short cursor_ = 0x100;
 
-	std::string filename_ = "";
-	std::vector<std::string> args_;
+	string filename_ = "";
+	vector<string> args_;
 };
 
-void Command::Parse(const std::string& cmd)
+void Command::Parse(const string& cmd)
 {
 	words_.clear();
 
 	size_t pos = 0;
-	std::string word = "";
+	string word = "";
 	char quote = '\0';
 	for (size_t i = 0; i < cmd.size(); ++i) {
 		char c = cmd[i];
 		if (quote == '\0' && (c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
 			if (!word.empty()) {
 				if (words_.empty() && word.size() > 1) {
-					words_.push_back(std::make_pair(pos, word.substr(0, 1)));
-					words_.push_back(std::make_pair(pos + 1, word.substr(1)));
+					words_.push_back(make_pair(pos, word.substr(0, 1)));
+					words_.push_back(make_pair(pos + 1, word.substr(1)));
 				} else {
-					words_.push_back(std::make_pair(pos, word));
+					words_.push_back(make_pair(pos, word));
 				}
 			}
 			word = "";
@@ -210,10 +211,10 @@ void Command::Parse(const std::string& cmd)
 	}
 	if (!word.empty()) {
 		if (words_.empty() && word.size() > 1) {
-			words_.push_back(std::make_pair(pos, word.substr(0, 1)));
-			words_.push_back(std::make_pair(pos + 1, word.substr(1)));
+			words_.push_back(make_pair(pos, word.substr(0, 1)));
+			words_.push_back(make_pair(pos + 1, word.substr(1)));
 		} else {
-			words_.push_back(std::make_pair(pos, word));
+			words_.push_back(make_pair(pos, word));
 		}
 	}
 	cmd_ = cmd;
@@ -223,11 +224,11 @@ void Command::Parse(const std::string& cmd)
 
 void Command::Dump() const
 {
-	std::cerr << "[DEBUG] Split: '" << cmd_ << "' =>\n";
+	cerr << "[DEBUG] Split: '" << cmd_ << "' =>\n";
 	for (auto x : words_) {
-		std::cerr << "[DEBUG]    (pos = " << x.first << "): '" << x.second << "'\n";
+		cerr << "[DEBUG]    (pos = " << x.first << "): '" << x.second << "'\n";
 	}
-	std::cerr << std::flush;
+	cerr << flush;
 }
 
 int Console::KeyboardHit()
@@ -268,7 +269,7 @@ int Console::GetInputChar()
 	}
 }
 
-bool ConsoleUI::Init(Registers& registers, Memory& memory, const std::vector<std::string>& args)
+bool ConsoleUI::Init(Registers& registers, Memory& memory, const vector<string>& args)
 {
 	curSeg_ = registers.GetDS();
 	if (!args.empty()) {
@@ -279,7 +280,7 @@ bool ConsoleUI::Init(Registers& registers, Memory& memory, const std::vector<std
 		}
 		registers.Set("cx", size);
 		if (args.size() > 1) {
-			args_ = std::vector<std::string>(args.begin() + 1, args.end());
+			args_ = vector<string>(args.begin() + 1, args.end());
 		}
 	}
 	return true;
@@ -288,7 +289,7 @@ bool ConsoleUI::Init(Registers& registers, Memory& memory, const std::vector<std
 Command ConsoleUI::GetCommand()
 {
 	ShowPrompt();
-	std::string line = ReadLine();
+	string line = ReadLine();
 	Command cmd;
 	cmd.Parse(line);
 	return cmd;
@@ -296,10 +297,10 @@ Command ConsoleUI::GetCommand()
 
 void ConsoleUI::ShowPrompt() const
 {
-	std::cout << prompt_ << std::flush;
+	cout << prompt_ << flush;
 }
 
-std::string ConsoleUI::ReadLine()
+string ConsoleUI::ReadLine()
 {
 	static const size_t BUFFER_SIZE = 4096;
 	char buffer[BUFFER_SIZE];
@@ -366,7 +367,7 @@ bool ParseHex(char c, unsigned char& value)
 }
 
 template <class T>
-bool ParseHex(const std::string& s, T& value)
+bool ParseHex(const string& s, T& value)
 {
 	value = 0;
 	for (size_t i = 0; i < s.size(); ++i) {
@@ -379,7 +380,7 @@ bool ParseHex(const std::string& s, T& value)
 	return true;
 }
 
-bool ParseOffset(const std::string& s, unsigned short& offset, size_t& errPos, std::string& errInfo)
+bool ParseOffset(const string& s, unsigned short& offset, size_t& errPos, string& errInfo)
 {
 	if (!ParseHex(s, offset)) {
 		errPos = 0;
@@ -389,12 +390,12 @@ bool ParseOffset(const std::string& s, unsigned short& offset, size_t& errPos, s
 	return true;
 }
 
-bool ParseAddress(const std::string& s, unsigned short& seg, unsigned short& offset, size_t& errPos, std::string& errInfo, Registers& registers)
+bool ParseAddress(const string& s, unsigned short& seg, unsigned short& offset, size_t& errPos, string& errInfo, Registers& registers)
 {
 	auto text = s;
 	size_t skip = 0;
 	auto pos = text.find_first_of(':');
-	if (pos == std::string::npos) {
+	if (pos == string::npos) {
 		seg = registers.GetDS();
 	} else {
 		skip = pos + 1;
@@ -435,7 +436,7 @@ void ConsoleUI::CompareMemory(const Command& cmd, Registers& registers, Memory& 
 	unsigned short srcSeg, srcStart, srcEnd;
 	unsigned short dstSeg, dstStart;
 	size_t errPos;
-	std::string errInfo;
+	string errInfo;
 	if (!ParseAddress(cmd.GetWords()[1].second, srcSeg, srcStart, errPos, errInfo, registers)) {
 		ShowError(cmd.GetWords()[1].first + errPos, errInfo.c_str());
 		return;
@@ -455,7 +456,7 @@ void ConsoleUI::CopyMemory(const Command& cmd, Registers& registers, Memory& mem
 {
 	unsigned short seg, start, end, dstSeg, dstStart;
 	size_t errPos;
-	std::string errInfo;
+	string errInfo;
 	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
@@ -480,13 +481,13 @@ void ConsoleUI::EnterData(const Command& cmd, Registers& registers, Memory& memo
 	}
 	unsigned short seg, start;
 	size_t errPos;
-	std::string errInfo;
+	string errInfo;
 	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
 		return;
 	}
-	std::vector<unsigned char> data;
+	vector<unsigned char> data;
 	if (cmd.GetWords().size() > 2) {
 		for (size_t i = 2; i < cmd.GetWords().size(); ++i) {
 			if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
@@ -505,7 +506,7 @@ void ConsoleUI::EnterData(const Command& cmd, Registers& registers, Memory& memo
 			}
 		}
 	} else {
-		std::string word = "";
+		string word = "";
 		bool exitFlag = false;
 		for (unsigned short offset = start; !exitFlag; ++offset) {
 			if (offset == start || offset % 8 == 0) {
@@ -569,7 +570,7 @@ void ConsoleUI::SearchData(const Command& cmd, Registers& registers, Memory& mem
 	}
 	unsigned short seg, start, end;
 	size_t errPos;
-	std::string errInfo;
+	string errInfo;
 	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
@@ -579,7 +580,7 @@ void ConsoleUI::SearchData(const Command& cmd, Registers& registers, Memory& mem
 		ShowError(words[2].first + errPos, errInfo.c_str());
 		return;
 	}
-	std::vector<unsigned char> data;
+	vector<unsigned char> data;
 	for (size_t i = 3; i < cmd.GetWords().size(); ++i) {
 		if (words[i].second[0] == '\'' || words[i].second[0] == '\"') {
 			for (size_t j = 0; j < words[i].second.size(); ++j) {
@@ -607,7 +608,7 @@ void ConsoleUI::FillData(const Command& cmd, Registers& registers, Memory& memor
 	}
 	unsigned short seg, start, end;
 	size_t errPos;
-	std::string errInfo;
+	string errInfo;
 	auto words = cmd.GetWords();
 	if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 		ShowError(words[1].first + errPos, errInfo.c_str());
@@ -617,7 +618,7 @@ void ConsoleUI::FillData(const Command& cmd, Registers& registers, Memory& memor
 		ShowError(words[2].first + errPos, errInfo.c_str());
 		return;
 	}
-	std::vector<unsigned char> data;
+	vector<unsigned char> data;
 	for (size_t i = 3; i < cmd.GetWords().size(); ++i) {
 		unsigned char x;
 		if (!ParseHex(words[i].second, x)) {
@@ -629,7 +630,7 @@ void ConsoleUI::FillData(const Command& cmd, Registers& registers, Memory& memor
 	memory.FillData(seg, start, end, data);
 }
 
-void ConsoleUI::SetFilename(const std::string& f)
+void ConsoleUI::SetFilename(const string& f)
 {
 	filename_ = f;
 }
@@ -645,7 +646,7 @@ void ConsoleUI::LoadData(const Command& cmd, Registers& registers, Memory& memor
 		offset = cursor_;
 	} else {
 		size_t errPos;
-		std::string errInfo;
+		string errInfo;
 		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
@@ -668,7 +669,7 @@ void ConsoleUI::WriteData(const Command& cmd, Registers& registers, Memory& memo
 		offset = cursor_;
 	} else {
 		size_t errPos;
-		std::string errInfo;
+		string errInfo;
 		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
@@ -691,7 +692,7 @@ void ConsoleUI::Unassemble(const Command& cmd, Registers& registers, Memory& mem
 		offset = cursor_;
 	} else {
 		size_t errPos;
-		std::string errInfo;
+		string errInfo;
 		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, offset, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
@@ -716,7 +717,7 @@ void ConsoleUI::DumpMemory(const Command& cmd, Registers& registers, Memory& mem
 		end = start + 0x80 - 1;
 	} else {
 		size_t errPos;
-		std::string errInfo;
+		string errInfo;
 		auto words = cmd.GetWords();
 		if (!ParseAddress(words[1].second, seg, start, errPos, errInfo, registers)) {
 			ShowError(words[1].first + errPos, errInfo.c_str());
@@ -788,17 +789,17 @@ void ConsoleUI::HexCalc(const Command& cmd)
 			static_cast<unsigned short>(a - b));
 }
 
-std::string Trim(const std::string& text)
+string Trim(const string& text)
 {
 	auto s = text;
 	auto start = s.find_first_not_of(" \t\r\n");
-	if (start == std::string::npos) {
+	if (start == string::npos) {
 		s = "";
 	} else {
 		s = s.substr(start);
 	}
 	auto end = s.find_last_not_of(" \t\r\n");
-	if (end == std::string::npos) {
+	if (end == string::npos) {
 		s = "";
 	} else {
 		s = s.substr(0, end + 1);
@@ -813,7 +814,7 @@ void ConsoleUI::ChangeRegisters(const Command& cmd, Registers& registers)
 		ShowError(words[3].first, "Unexpected argument");
 		return;
 	}
-	std::string regName = words[1].second;
+	string regName = words[1].second;
 	unsigned short value;
 	if (cmd.GetWords().size() == 2) {
 		if (!registers.Get(regName, value)) {
@@ -823,7 +824,7 @@ void ConsoleUI::ChangeRegisters(const Command& cmd, Registers& registers)
 		printf("%s %04X  :", regName.c_str(), value);
 		char buf[32];
 		fgets(buf, sizeof(buf), stdin);
-		std::string s = Trim(buf);
+		string s = Trim(buf);
 		if (s.empty()) {
 			return;
 		}
@@ -994,7 +995,7 @@ void Memory::Copy(unsigned short srcSeg, unsigned short srcStart, unsigned short
 	}
 }
 
-void Memory::PutData(unsigned short seg, unsigned short start, std::vector<unsigned char> data)
+void Memory::PutData(unsigned short seg, unsigned short start, vector<unsigned char> data)
 {
 	size_t offset = seg * 16 + start;
 	for (size_t i = 0; i < data.size(); ++i) {
@@ -1009,7 +1010,7 @@ unsigned char Memory::GetChar(unsigned short seg, unsigned short offset) const
 }
 
 void Memory::SearchData(unsigned short seg, unsigned short start, unsigned short end,
-		const std::vector<unsigned char>& data)
+		const vector<unsigned char>& data)
 {
 	for (unsigned short offset = start; offset + data.size() != end; ++offset) {
 		size_t realOffset = seg * 16 + offset;
@@ -1027,7 +1028,7 @@ void Memory::SearchData(unsigned short seg, unsigned short start, unsigned short
 }
 
 void Memory::FillData(unsigned short seg, unsigned short start, unsigned short end,
-		const std::vector<unsigned char>& data)
+		const vector<unsigned char>& data)
 {
 	size_t i = 0;
 	for (unsigned short offset = start; ; ++offset, ++i) {
@@ -1039,7 +1040,7 @@ void Memory::FillData(unsigned short seg, unsigned short start, unsigned short e
 	}
 }
 
-bool Memory::Load(const std::string& filename, unsigned short seg,
+bool Memory::Load(const string& filename, unsigned short seg,
 		unsigned short offset, unsigned short& size)
 {
 	unsigned short realOffset = seg * 16 + offset;
@@ -1061,7 +1062,7 @@ bool Memory::Load(const std::string& filename, unsigned short seg,
 	return true;
 }
 
-bool Memory::Write(const std::string& filename, unsigned short seg,
+bool Memory::Write(const string& filename, unsigned short seg,
 		unsigned short offset, unsigned short size)
 {
 	unsigned short realOffset = seg * 16 + offset;
@@ -1083,14 +1084,14 @@ bool Memory::Write(const std::string& filename, unsigned short seg,
 	return true;
 }
 
-std::string Memory::Hex(unsigned char x)
+string Memory::Hex(unsigned char x)
 {
 	char buf[16] = "";
 	snprintf(buf, sizeof(buf), "%02X", x);
 	return buf;
 }
 
-bool Memory::ParseOneInstrument(const unsigned char* p, size_t& count, std::string& op, std::string& operands) const
+bool Memory::ParseOneInstrument(const unsigned char* p, size_t& count, string& op, string& operands) const
 {
 	const char* reg[] = { "AX", "BX", "CX", "DX", "SP", "BP", "SI", "DI" };
 	if (*p >= 0x50 && *p <= 0x57) {
@@ -1117,11 +1118,11 @@ bool Memory::Unassemble(unsigned short seg, unsigned short offset) const
 {
 	for (unsigned short x = offset; x < offset + 32; ) {
 		size_t count = 0;
-		std::string op;
-		std::string operands;
+		string op;
+		string operands;
 		ParseOneInstrument(&data_[seg * 16 + x], count, op, operands);
 
-		std::string data;
+		string data;
 		for (size_t i = 0; i < count; ++i) {
 			data += Hex(data_[seg * 16 + x + i]);
 		}
@@ -1144,26 +1145,26 @@ void Processor::SetCoProcessorType(CoProcessorType type)
 void Processor::ShowProcessorType()
 {
 	switch (processor) {
-	case ProcessorType::PT_8086: std::cout << "8086/88"; break;
-	case ProcessorType::PT_186:  std::cout << "186";     break;
-	case ProcessorType::PT_286:  std::cout << "286";     break;
-	case ProcessorType::PT_386:  std::cout << "386";     break;
-	case ProcessorType::PT_486:  std::cout << "486";     break;
-	case ProcessorType::PT_586:  std::cout << "586";     break;
-	case ProcessorType::PT_686:  std::cout << "686";     break;
-	default: std::cout.setstate(std::ios_base::failbit);
+	case ProcessorType::PT_8086: cout << "8086/88"; break;
+	case ProcessorType::PT_186:  cout << "186";     break;
+	case ProcessorType::PT_286:  cout << "286";     break;
+	case ProcessorType::PT_386:  cout << "386";     break;
+	case ProcessorType::PT_486:  cout << "486";     break;
+	case ProcessorType::PT_586:  cout << "586";     break;
+	case ProcessorType::PT_686:  cout << "686";     break;
+	default: cout.setstate(ios_base::failbit);
 	}
 
-	std::cout << " ";
+	cout << " ";
 
 	switch (coprocessor) {
-	case CoProcessorType::CPT_NONE: std::cout << "without coprocessor"; break;
-	case CoProcessorType::CPT_287:  std::cout << "with 287";            break;
-	case CoProcessorType::CPT_387:  std::cout << "with coprocessor";    break;
-	default: std::cout.setstate(std::ios_base::failbit);
+	case CoProcessorType::CPT_NONE: cout << "without coprocessor"; break;
+	case CoProcessorType::CPT_287:  cout << "with 287";            break;
+	case CoProcessorType::CPT_387:  cout << "with coprocessor";    break;
+	default: cout.setstate(ios_base::failbit);
 	}
 
-	std::cout << std::endl;
+	cout << endl;
 }
 
 void Registers::Dump()
@@ -1184,16 +1185,16 @@ void Registers::Dump()
 	printf("%04X:%04X F60000        TEST    BYTE PTR [BX+SI],00                  DS:0000=CD\n", regs_[CS], regs_[IP]);
 }
 
-std::string ToUpper(const std::string& s)
+string ToUpper(const string& s)
 {
-	std::string r = s;
+	string r = s;
 	for (auto& c : r) {
-		c = std::toupper(c);
+		c = toupper(c);
 	}
 	return r;
 }
 
-bool Registers::GetSeg(const std::string& name, unsigned short& value) const
+bool Registers::GetSeg(const string& name, unsigned short& value) const
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
@@ -1210,7 +1211,7 @@ bool Registers::GetSeg(const std::string& name, unsigned short& value) const
 	return true;
 }
 
-bool Registers::Get(const std::string& name, unsigned short& value) const
+bool Registers::Get(const string& name, unsigned short& value) const
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
@@ -1245,7 +1246,7 @@ bool Registers::Get(const std::string& name, unsigned short& value) const
 	return true;
 }
 
-bool Registers::Set(const std::string& name, unsigned short value)
+bool Registers::Set(const string& name, unsigned short value)
 {
 	auto uname = ToUpper(name);
 	if (uname == "DS") {
@@ -1282,12 +1283,12 @@ bool Registers::Set(const std::string& name, unsigned short value)
 
 int main(int argc, char* const* argv)
 {
-	std::vector<std::string> args(argv + 1, argv + argc);
+	vector<string> args(argv + 1, argv + argc);
 	Processor processor;
 
 	ConsoleUI ui;
 	if (!ui.Init(processor.GetRegisters(), processor.GetMemory(), args)) {
-		std::cerr << "Error: Failed to initialize console UI!" << std::endl;
+		cerr << "Error: Failed to initialize console UI!" << endl;
 		return 1;
 	}
 
