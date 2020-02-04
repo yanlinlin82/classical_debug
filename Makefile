@@ -6,4 +6,4 @@ clean:
 	@rm -fv debug
 
 debug: x86-debug.cpp
-	g++ -Wall -std=c++17 x86-debug.cpp -o debug
+	g++ -Wall -std=c++17 $< -o $@
